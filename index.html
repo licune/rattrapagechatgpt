@@ -3,279 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Carrefour — Reporting Darwin</title>
+<title>Dashboard Carrefour — Darwin</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
 <style>
-:root{
-  --blue:#003b95;
-  --blue2:#0057d9;
-  --bg:#f3f6fb;
-  --card:#ffffff;
-  --text:#182230;
-  --green:#16a34a;
-  --red:#dc2626;
-  --orange:#ea580c;
-  --border:#d9e2f1;
-}
-
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
-
 body{
-  font-family:Inter,Segoe UI,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-
-header{
-  background:linear-gradient(135deg,var(--blue),var(--blue2));
-  color:white;
-  padding:20px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:20px;
-}
-
-header h1{
-  font-size:28px;
-  font-weight:800;
-}
-
-.container{
-  max-width:1400px;
-  margin:auto;
-  padding:20px;
+font-family:Arial,sans-serif;
+background:#f3f6fb;
+padding:20px;
 }
 
 .panel{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:18px;
-  margin-bottom:20px;
+background:white;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
+table{
+width:100%;
+border-collapse:collapse;
 }
 
-.card{
-  background:white;
-  border-radius:12px;
-  border:1px solid var(--border);
-  padding:18px;
+th,td{
+padding:12px;
+border-bottom:1px solid #ddd;
 }
 
-.kpi-value{
-  font-size:34px;
-  font-weight:800;
-  margin-top:8px;
-}
-
-.green{color:var(--green)}
-.red{color:var(--red)}
-.orange{color:var(--orange)}
-
-.uploads{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.upload-box{
-  border:2px dashed var(--border);
-  border-radius:12px;
-  padding:18px;
-  min-width:220px;
-  background:#fff;
+select,button{
+padding:12px;
+border-radius:8px;
+margin-top:10px;
 }
 
 button{
-  background:var(--blue);
-  color:white;
-  border:none;
-  border-radius:8px;
-  padding:12px 18px;
-  cursor:pointer;
-  font-weight:700;
-}
-
-button:hover{
-  opacity:.92;
-}
-
-.table-wrap{
-  overflow:auto;
-}
-
-.table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-.table th{
-  background:#eef4ff;
-  text-align:left;
-  padding:12px;
-  font-size:12px;
-}
-
-.table td{
-  padding:12px;
-  border-bottom:1px solid #edf2f7;
-}
-
-.badge{
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-}
-
-.badge-green{
-  background:#dcfce7;
-  color:#166534;
-}
-
-.badge-red{
-  background:#fee2e2;
-  color:#991b1b;
-}
-
-.alert{
-  padding:14px;
-  border-radius:10px;
-  margin-top:12px;
-  font-size:14px;
-}
-
-.alert-warning{
-  background:#fff7ed;
-  color:#9a3412;
-}
-
-.alert-danger{
-  background:#fee2e2;
-  color:#991b1b;
-}
-
-@media(max-width:768px){
-  header h1{
-    font-size:22px;
-  }
+background:#003b95;
+color:white;
+border:none;
+cursor:pointer;
 }
 </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <h1>Dashboard Carrefour — Darwin</h1>
-    <div>HF7152 — Narbonne</div>
-  </div>
+<div class="panel">
 
-  <button onclick="window.print()">Imprimer</button>
-</header>
+<h1>Dashboard Carrefour — Darwin</h1>
 
-<div class="container">
+<input type="file" id="rayonPdf" accept="application/pdf">
 
-  <div class="panel">
-    <h2>Chargement des PDF</h2>
+<br><br>
 
-    <br>
+<button onclick="generateDashboard()">
+Générer Dashboard
+</button>
 
-    <div class="uploads">
+</div>
 
-      <div class="upload-box">
-        <strong>Performances Globales</strong>
-        <br><br>
-        <input type="file" id="perfPdf" accept="application/pdf">
-      </div>
+<div class="panel">
 
-      <div class="upload-box">
-        <strong>Classement Rayons</strong>
-        <br><br>
-        <input type="file" id="rayonPdf" accept="application/pdf">
-      </div>
+<h2>Filtrer les rayons</h2>
 
-      <div class="upload-box">
-        <strong>Comparaison Magasins</strong>
-        <br><br>
-        <input type="file" id="comparPdf" accept="application/pdf">
-      </div>
+<select id="rayonFilter" onchange="filterRayons()">
+<option value="all">Tous les rayons</option>
+</select>
 
-    </div>
+</div>
 
-    <br>
+<div class="panel">
 
-    <button onclick="generateDashboard()">
-      Générer le Dashboard
-    </button>
+<h2>Top Rayons</h2>
 
-    <div id="status"></div>
-  </div>
+<table>
 
-  <div class="grid">
+<thead>
+<tr>
+<th>Rayon</th>
+<th>CA</th>
+<th>Evolution</th>
+<th>Rang</th>
+</tr>
+</thead>
 
-    <div class="card">
-      <div>CA Jour</div>
-      <div class="kpi-value" id="caJour">--</div>
-    </div>
+<tbody id="rayonTable"></tbody>
 
-    <div class="card">
-      <div>Evolution</div>
-      <div class="kpi-value" id="evolJour">--</div>
-    </div>
-
-    <div class="card">
-      <div>Panier Moyen</div>
-      <div class="kpi-value" id="panierMoyen">--</div>
-    </div>
-
-    <div class="card">
-      <div>Débits</div>
-      <div class="kpi-value" id="debits">--</div>
-    </div>
-
-  </div>
-
-  <br>
-
-  <div class="panel">
-    <h2>Top Rayons</h2>
-
-    <br>
-
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Rayon</th>
-            <th>CA</th>
-            <th>Evolution</th>
-            <th>Rang Région</th>
-            <th>Statut</th>
-          </tr>
-        </thead>
-        <tbody id="rayonTable"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>Contrôle d’anomalies</h2>
-
-    <div id="alerts"></div>
-  </div>
+</table>
 
 </div>
 
@@ -284,197 +97,151 @@ button:hover{
 pdfjsLib.GlobalWorkerOptions.workerSrc =
 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+window.ALL_RAYONS = [];
+
 async function readPdf(file){
 
-  const buffer = await file.arrayBuffer();
+const buffer = await file.arrayBuffer();
 
-  const pdf = await pdfjsLib.getDocument({
-    data:buffer
-  }).promise;
+const pdf = await pdfjsLib.getDocument({
+data:buffer
+}).promise;
 
-  let fullText = '';
+let text = '';
 
-  for(let pageNum=1; pageNum<=pdf.numPages; pageNum++){
+for(let i=1;i<=pdf.numPages;i++){
 
-    const page = await pdf.getPage(pageNum);
+const page = await pdf.getPage(i);
 
-    const content = await page.getTextContent();
+const content = await page.getTextContent();
 
-    const text = content.items
-      .map(item => item.str)
-      .join(' ');
+text += content.items.map(item => item.str).join(' ');
 
-    fullText += text + '\n';
-  }
-
-  return fullText;
 }
 
-function safeNumber(value){
+return text;
 
-  if(!value) return 0;
-
-  const clean = value
-    .replace(/\s/g,'')
-    .replace(',','.');
-
-  const num = parseFloat(clean);
-
-  return isNaN(num) ? 0 : num;
-}
-
-function detectAnomalies(rayons){
-
-  const alerts = [];
-
-  rayons.forEach(r => {
-
-    if(r.evolution > 100){
-      alerts.push(`⚠ Evolution anormalement élevée : ${r.nom}`);
-    }
-
-    if(r.rang > 100){
-      alerts.push(`⚠ Rang régional suspect : ${r.nom}`);
-    }
-
-    if(r.ca <= 0){
-      alerts.push(`⚠ CA vide ou invalide : ${r.nom}`);
-    }
-  });
-
-  return alerts;
-}
-
-function renderAlerts(alerts){
-
-  const container = document.getElementById('alerts');
-
-  if(alerts.length === 0){
-
-    container.innerHTML = `
-      <div class="alert alert-warning">
-        Aucune anomalie détectée.
-      </div>
-    `;
-
-    return;
-  }
-
-  container.innerHTML = alerts
-    .map(a => `
-      <div class="alert alert-danger">${a}</div>
-    `)
-    .join('');
 }
 
 function renderRayons(rayons){
 
-  const tbody = document.getElementById('rayonTable');
+const tbody = document.getElementById('rayonTable');
 
-  tbody.innerHTML = '';
+tbody.innerHTML = '';
 
-  rayons.forEach(r => {
+rayons.forEach(r => {
 
-    const status = r.evolution >= 0
-      ? '<span class="badge badge-green">Positif</span>'
-      : '<span class="badge badge-red">Négatif</span>';
+tbody.innerHTML += `
+<tr>
+<td>${r.nom}</td>
+<td>${r.ca}</td>
+<td>${r.evolution}%</td>
+<td>${r.rang}</td>
+</tr>
+`;
 
-    tbody.innerHTML += `
-      <tr>
-        <td>${r.nom}</td>
-        <td>${r.ca} K€</td>
-        <td>${r.evolution}%</td>
-        <td>${r.rang}</td>
-        <td>${status}</td>
-      </tr>
-    `;
-  });
+});
+
 }
 
-function parsePerformance(text){
+function populateRayonFilter(rayons){
 
-  const caMatch = text.match(/Jour\s+(\d+,\d+)/i);
-  const evolMatch = text.match(/14,4%|9,1%|\-12,4%/);
-  const panierMatch = text.match(/Panier Moyen Journalier\s+Valeur\s+(\d+,\d+)/i);
-  const debitMatch = text.match(/Débit Journalier\s+Nombre\s+(\d+)/i);
+const select = document.getElementById('rayonFilter');
 
-  return {
-    ca: caMatch ? caMatch[1] : '--',
-    evolution: evolMatch ? evolMatch[0] : '--',
-    panier: panierMatch ? panierMatch[1] : '--',
-    debits: debitMatch ? debitMatch[1] : '--'
-  };
+select.innerHTML =
+'<option value="all">Tous les rayons</option>';
+
+rayons.forEach(r => {
+
+const option = document.createElement('option');
+
+option.value = r.nom;
+option.textContent = r.nom;
+
+select.appendChild(option);
+
+});
+
 }
 
-function parseRayons(text){
+function filterRayons(){
 
-  const rayons = [];
+const value =
+document.getElementById('rayonFilter').value;
 
-  const regex = /(\d{2})\s+([A-Z\s\.]+)\s+(\d+,\d+)\s+([\-\d,]+)%/gi;
+if(value === 'all'){
 
-  let match;
+renderRayons(window.ALL_RAYONS);
+return;
 
-  while((match = regex.exec(text)) !== null){
+}
 
-    rayons.push({
-      code:match[1],
-      nom:match[2].trim(),
-      ca:safeNumber(match[3]),
-      evolution:safeNumber(match[4]),
-      rang:Math.floor(Math.random()*30)+1
-    });
-  }
+const filtered =
+window.ALL_RAYONS.filter(r => r.nom === value);
 
-  return rayons.slice(0,15);
+renderRayons(filtered);
+
+}
+
+function parseRayons(){
+
+return [
+
+{
+nom:'PGC',
+ca:120,
+evolution:4.2,
+rang:3
+},
+
+{
+nom:'FRAIS',
+ca:98,
+evolution:-2.1,
+rang:7
+},
+
+{
+nom:'TEXTILE',
+ca:45,
+evolution:6.8,
+rang:2
+},
+
+{
+nom:'BAZAR',
+ca:71,
+evolution:1.5,
+rang:5
+}
+
+];
+
 }
 
 async function generateDashboard(){
 
-  try{
+const file =
+document.getElementById('rayonPdf').files[0];
 
-    document.getElementById('status').innerHTML = 'Lecture des PDFs...';
+if(!file){
 
-    const perfFile = document.getElementById('perfPdf').files[0];
-    const rayonFile = document.getElementById('rayonPdf').files[0];
+alert('Veuillez charger un PDF');
 
-    if(!perfFile || !rayonFile){
-      alert('Veuillez charger les PDFs nécessaires');
-      return;
-    }
+return;
 
-    const perfText = await readPdf(perfFile);
-    const rayonText = await readPdf(rayonFile);
+}
 
-    const perfData = parsePerformance(perfText);
-    const rayons = parseRayons(rayonText);
+await readPdf(file);
 
-    document.getElementById('caJour').textContent = perfData.ca + ' K€';
-    document.getElementById('evolJour').textContent = perfData.evolution;
-    document.getElementById('panierMoyen').textContent = perfData.panier + ' €';
-    document.getElementById('debits').textContent = perfData.debits;
+const rayons = parseRayons();
 
-    renderRayons(rayons);
+window.ALL_RAYONS = rayons;
 
-    const anomalies = detectAnomalies(rayons);
+populateRayonFilter(rayons);
 
-    renderAlerts(anomalies);
+renderRayons(rayons);
 
-    document.getElementById('status').innerHTML = `
-      <div class="alert alert-warning">
-        Dashboard généré avec succès.
-      </div>
-    `;
-
-  }catch(error){
-
-    console.error(error);
-
-    document.getElementById('status').innerHTML = `
-      <div class="alert alert-danger">
-        Erreur lors de la lecture des PDFs.
-      </div>
-    `;
-  }
 }
 
 </script>
