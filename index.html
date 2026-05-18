@@ -1,247 +1,147 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Carrefour — Darwin</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brief Journalier Carrefour</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
-<style>
-body{
-font-family:Arial,sans-serif;
-background:#f3f6fb;
-padding:20px;
-}
-
-.panel{
-background:white;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid #ddd;
-}
-
-select,button{
-padding:12px;
-border-radius:8px;
-margin-top:10px;
-}
-
-button{
-background:#003b95;
-color:white;
-border:none;
-cursor:pointer;
-}
-</style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
 
-<div class="panel">
+<body class="bg-slate-100 min-h-screen p-6">
 
-<h1>Dashboard Carrefour — Darwin</h1>
+<div class="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl p-8">
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-5xl font-black">Brief Journalier Carrefour</h1>
+      <p class="text-slate-500 mt-2">Narbonne - Journée du 14/05/2026</p>
+    </div>
 
-<input type="file" id="rayonPdf" accept="application/pdf">
+    <div class="flex gap-3">
+      <input type="file" id="pdfInput" accept="application/pdf" class="hidden">
 
-<br><br>
+      <button onclick="openPdfSelector()"
+        class="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold">
+        Import PDF
+      </button>
 
-<button onclick="generateDashboard()">
-Générer Dashboard
-</button>
+      <button onclick="generatePDF()"
+        class="bg-emerald-600 text-white px-5 py-3 rounded-2xl font-bold">
+        Générer le brief
+      </button>
 
-</div>
+      <button onclick="printBrief()"
+        class="bg-black text-white px-5 py-3 rounded-2xl font-bold">
+        Imprimer
+      </button>
+    </div>
+  </div>
 
-<div class="panel">
+  <div id="printable-brief" class="mt-8">
 
-<h2>Filtrer les rayons</h2>
+    <div class="grid grid-cols-2 gap-4">
 
-<select id="rayonFilter" onchange="filterRayons()">
-<option value="all">Tous les rayons</option>
-</select>
+      <div class="bg-slate-50 rounded-2xl p-5">
+        <p class="text-slate-500">CA</p>
+        <h2 class="text-3xl font-black">335 K€</h2>
+      </div>
 
-</div>
+      <div class="bg-slate-50 rounded-2xl p-5">
+        <p class="text-slate-500">Marge</p>
+        <h2 class="text-3xl font-black">28,44%</h2>
+      </div>
 
-<div class="panel">
+      <div class="bg-slate-50 rounded-2xl p-5">
+        <p class="text-slate-500">Stocks négatifs</p>
+        <h2 class="text-3xl font-black">32</h2>
+      </div>
 
-<h2>Top Rayons</h2>
+      <div class="bg-slate-50 rounded-2xl p-5">
+        <p class="text-slate-500">Ruptures catalogue</p>
+        <h2 class="text-3xl font-black">17</h2>
+      </div>
 
-<table>
+    </div>
 
-<thead>
-<tr>
-<th>Rayon</th>
-<th>CA</th>
-<th>Evolution</th>
-<th>Rang</th>
-</tr>
-</thead>
+    <div class="mt-6 bg-slate-50 rounded-2xl p-6">
+      <h2 class="text-2xl font-black mb-4">Consignes</h2>
 
-<tbody id="rayonTable"></tbody>
+      <ul class="space-y-3">
+        <li>• Contrôler les ruptures fortes rotations</li>
+        <li>• Vérifier la propreté des TG</li>
+        <li>• Contrôler les DLC</li>
+      </ul>
+    </div>
 
-</table>
-
+  </div>
 </div>
 
 <script>
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-window.ALL_RAYONS = [];
-
-async function readPdf(file){
-
-const buffer = await file.arrayBuffer();
-
-const pdf = await pdfjsLib.getDocument({
-data:buffer
-}).promise;
-
-let text = '';
-
-for(let i=1;i<=pdf.numPages;i++){
-
-const page = await pdf.getPage(i);
-
-const content = await page.getTextContent();
-
-text += content.items.map(item => item.str).join(' ');
-
+function openPdfSelector() {
+  document.getElementById('pdfInput').click();
 }
 
-return text;
+document.getElementById('pdfInput')
+.addEventListener('change', function(e) {
 
-}
+  const file = e.target.files[0];
 
-function renderRayons(rayons){
+  if (!file) return;
 
-const tbody = document.getElementById('rayonTable');
-
-tbody.innerHTML = '';
-
-rayons.forEach(r => {
-
-tbody.innerHTML += `
-<tr>
-<td>${r.nom}</td>
-<td>${r.ca}</td>
-<td>${r.evolution}%</td>
-<td>${r.rang}</td>
-</tr>
-`;
-
+  alert('PDF chargé : ' + file.name);
 });
 
+function printBrief() {
+  setTimeout(() => {
+    window.print();
+  }, 100);
 }
 
-function populateRayonFilter(rayons){
+async function generatePDF() {
 
-const select = document.getElementById('rayonFilter');
+  try {
 
-select.innerHTML =
-'<option value="all">Tous les rayons</option>';
+    const { jsPDF } = window.jspdf;
 
-rayons.forEach(r => {
+    const element = document.getElementById('printable-brief');
 
-const option = document.createElement('option');
+    const canvas = await html2canvas(element, {
+      scale: 2
+    });
 
-option.value = r.nom;
-option.textContent = r.nom;
+    const imgData = canvas.toDataURL('image/png');
 
-select.appendChild(option);
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-});
+    const pdfWidth = pdf.internal.pageSize.getWidth();
 
-}
+    const pdfHeight =
+      (canvas.height * pdfWidth) / canvas.width;
 
-function filterRayons(){
+    pdf.addImage(
+      imgData,
+      'PNG',
+      0,
+      0,
+      pdfWidth,
+      pdfHeight
+    );
 
-const value =
-document.getElementById('rayonFilter').value;
+    pdf.save('brief-journalier.pdf');
 
-if(value === 'all'){
+  } catch(error) {
 
-renderRayons(window.ALL_RAYONS);
-return;
+    console.error(error);
 
-}
-
-const filtered =
-window.ALL_RAYONS.filter(r => r.nom === value);
-
-renderRayons(filtered);
-
-}
-
-function parseRayons(){
-
-return [
-
-{
-nom:'PGC',
-ca:120,
-evolution:4.2,
-rang:3
-},
-
-{
-nom:'FRAIS',
-ca:98,
-evolution:-2.1,
-rang:7
-},
-
-{
-nom:'TEXTILE',
-ca:45,
-evolution:6.8,
-rang:2
-},
-
-{
-nom:'BAZAR',
-ca:71,
-evolution:1.5,
-rang:5
-}
-
-];
-
-}
-
-async function generateDashboard(){
-
-const file =
-document.getElementById('rayonPdf').files[0];
-
-if(!file){
-
-alert('Veuillez charger un PDF');
-
-return;
-
-}
-
-await readPdf(file);
-
-const rayons = parseRayons();
-
-window.ALL_RAYONS = rayons;
-
-populateRayonFilter(rayons);
-
-renderRayons(rayons);
-
+    alert('Erreur génération PDF');
+  }
 }
 
 </script>
