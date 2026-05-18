@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Brief Journalier Carrefour</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prototype Brief Journalier Carrefour</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -12,138 +12,141 @@
 
 <body class="bg-slate-100 min-h-screen p-6">
 
-<div class="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl p-8">
-  <div class="flex justify-between items-center">
-    <div>
-      <h1 class="text-5xl font-black">Brief Journalier Carrefour</h1>
-      <p class="text-slate-500 mt-2">Narbonne - Journée du 14/05/2026</p>
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
+
+    <div class="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-6">
+
+      <div>
+        <h1 class="text-5xl font-black text-slate-900">
+          Brief Journalier Carrefour
+        </h1>
+
+        <p class="text-slate-500 text-lg mt-3">
+          Narbonne - Journée du 14/05/2026
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+
+        <input type="file" id="pdf1" accept="application/pdf" class="hidden"/>
+        <input type="file" id="pdf2" accept="application/pdf" class="hidden"/>
+        <input type="file" id="pdf3" accept="application/pdf" class="hidden"/>
+
+        <button onclick="document.getElementById('pdf1').click()"
+          class="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold">
+          Import PDF Performance
+        </button>
+
+        <button onclick="document.getElementById('pdf2').click()"
+          class="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold">
+          Import PDF Comparaison
+        </button>
+
+        <button onclick="document.getElementById('pdf3').click()"
+          class="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold">
+          Import PDF Stocks
+        </button>
+
+        <button onclick="generatePDF()"
+          class="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold">
+          Générer le brief
+        </button>
+
+        <button onclick="window.print()"
+          class="bg-black text-white px-6 py-3 rounded-2xl font-bold">
+          Imprimer le brief
+        </button>
+
+      </div>
     </div>
 
-    <div class="flex gap-3">
-      <input type="file" id="pdfInput" accept="application/pdf" class="hidden">
+    <div class="mt-8 flex flex-wrap gap-3">
 
-      <button onclick="openPdfSelector()"
-        class="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold">
-        Import PDF
+      <select class="rounded-2xl border border-slate-300 px-5 py-4 w-[420px]">
+        <option>20 - CHARCUT.TRAITEUR</option>
+        <option>21 - POISSONNERIE</option>
+        <option>22 - FRUITS ET LEGUMES</option>
+        <option>23 - BOULANGERIE/PATISSERIE</option>
+        <option>24 - BOUCHERIE VOLAILLE</option>
+        <option>31 - CONFORT DE LA MAISON</option>
+      </select>
+
+      <button class="bg-orange-500 text-white px-5 py-3 rounded-2xl font-semibold">
+        Classement Région
       </button>
 
-      <button onclick="generatePDF()"
-        class="bg-emerald-600 text-white px-5 py-3 rounded-2xl font-bold">
-        Générer le brief
+      <button class="bg-slate-900 text-white px-5 py-3 rounded-2xl font-semibold">
+        Consigne manuelle
       </button>
 
-      <button onclick="printBrief()"
-        class="bg-black text-white px-5 py-3 rounded-2xl font-bold">
-        Imprimer
+      <button class="bg-blue-600 text-white px-5 py-3 rounded-2xl font-semibold">
+        Consignes
       </button>
+
     </div>
   </div>
 
-  <div id="printable-brief" class="mt-8">
+  <div id="brief" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-5">
 
-    <div class="grid grid-cols-2 gap-4">
-
-      <div class="bg-slate-50 rounded-2xl p-5">
-        <p class="text-slate-500">CA</p>
-        <h2 class="text-3xl font-black">335 K€</h2>
-      </div>
-
-      <div class="bg-slate-50 rounded-2xl p-5">
-        <p class="text-slate-500">Marge</p>
-        <h2 class="text-3xl font-black">28,44%</h2>
-      </div>
-
-      <div class="bg-slate-50 rounded-2xl p-5">
-        <p class="text-slate-500">Stocks négatifs</p>
-        <h2 class="text-3xl font-black">32</h2>
-      </div>
-
-      <div class="bg-slate-50 rounded-2xl p-5">
-        <p class="text-slate-500">Ruptures catalogue</p>
-        <h2 class="text-3xl font-black">17</h2>
-      </div>
-
+    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl shadow-lg p-5 text-white">
+      <p class="text-sm opacity-80">Classement France</p>
+      <h3 class="text-3xl font-black mt-3">#33 🔺 +1</h3>
     </div>
 
-    <div class="mt-6 bg-slate-50 rounded-2xl p-6">
-      <h2 class="text-2xl font-black mb-4">Consignes</h2>
+    <div class="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-3xl shadow-lg p-5 text-white">
+      <p class="text-sm opacity-80">Classement Région</p>
+      <h3 class="text-3xl font-black mt-3">#14 🔺 +3</h3>
+    </div>
 
-      <ul class="space-y-3">
-        <li>• Contrôler les ruptures fortes rotations</li>
-        <li>• Vérifier la propreté des TG</li>
-        <li>• Contrôler les DLC</li>
-      </ul>
+    <div class="bg-white rounded-3xl shadow-lg p-5">
+      <p class="text-sm text-slate-500">CA</p>
+      <h3 class="text-3xl font-black mt-3">335 K€</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-lg p-5">
+      <p class="text-sm text-slate-500">Marge</p>
+      <h3 class="text-3xl font-black mt-3">28,44%</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-lg p-5">
+      <p class="text-sm text-slate-500">Stocks négatifs</p>
+      <h3 class="text-3xl font-black mt-3">32</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-lg p-5">
+      <p class="text-sm text-slate-500">Ruptures catalogue</p>
+      <h3 class="text-3xl font-black mt-3">17</h3>
     </div>
 
   </div>
+
 </div>
 
 <script>
-
-function openPdfSelector() {
-  document.getElementById('pdfInput').click();
-}
-
-document.getElementById('pdfInput')
-.addEventListener('change', function(e) {
-
-  const file = e.target.files[0];
-
-  if (!file) return;
-
-  alert('PDF chargé : ' + file.name);
-});
-
-function printBrief() {
-  setTimeout(() => {
-    window.print();
-  }, 100);
-}
-
 async function generatePDF() {
 
-  try {
+  const { jsPDF } = window.jspdf;
 
-    const { jsPDF } = window.jspdf;
+  const element = document.getElementById('brief');
 
-    const element = document.getElementById('printable-brief');
+  const canvas = await html2canvas(element, {
+    scale: 2
+  });
 
-    const canvas = await html2canvas(element, {
-      scale: 2
-    });
+  const imgData = canvas.toDataURL('image/png');
 
-    const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF('p', 'mm', 'a4');
 
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+  const width = pdf.internal.pageSize.getWidth();
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
+  const height = (canvas.height * width) / canvas.width;
 
-    const pdfHeight =
-      (canvas.height * pdfWidth) / canvas.width;
+  pdf.addImage(imgData, 'PNG', 0, 0, width, height);
 
-    pdf.addImage(
-      imgData,
-      'PNG',
-      0,
-      0,
-      pdfWidth,
-      pdfHeight
-    );
-
-    pdf.save('brief-journalier.pdf');
-
-  } catch(error) {
-
-    console.error(error);
-
-    alert('Erreur génération PDF');
-  }
+  pdf.save('brief-journalier.pdf');
 }
-
 </script>
 
 </body>
