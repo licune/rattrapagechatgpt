@@ -1,346 +1,466 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Brief Journalier Carrefour</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Brief Journalier Carrefour</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
-
-    @media print {
-      .no-print {
-        display: none !important;
-      }
-
-      body {
-        background: white !important;
-      }
-    }
-  </style>
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+</style>
 </head>
 
 <body class="bg-slate-100">
-  <div id="root"></div>
+<div id="root"></div>
 
-  <script type="text/babel">
+<script type="text/babel">
 
-    const { useState, useMemo, useRef } = React;
+const { useState, useMemo, useRef } = React;
 
-    const reportingData = {
-      magasin: "HF7152 - Narbonne",
-      date: "14/05/2026",
+const rayonMapping = {
+  "10": "10 - BOISSONS",
+  "11": "11 - DROGUERIE",
+  "12": "12 - PARFUMERIE HYGIENE",
+  "14": "14 - EPICERIE",
+  "19": "19 - PARAPHARMACIE",
+  "20": "20 - CHARCUT.TRAITEUR",
+  "21": "21 - POISSONNERIE",
+  "22": "22 - FRUITS ET LEGUMES",
+  "23": "23 - BOULANGERIE/PATISSERIE",
+  "24": "24 - BOUCHERIE VOLAILLE",
+  "25": "25 - P.L.S.",
+  "26": "26 - CAFETERIA ESPACE RESTA",
+  "30": "30 - BRICOLAGE",
+  "31": "31 - CONFORT DE LA MAISON",
+  "32": "32 - PAPETERIE",
+  "33": "33 - JOUET SPORT",
+  "34": "34 - JARDIN ET ANIMALERIE",
+  "35": "35 - AUTO",
+  "40": "40 - GEM",
+  "41": "41 - PEM",
+  "42": "42 - PHOTO COMMUNICATION",
+  "43": "43 - IMAGE ET SON",
+  "44": "44 - MICRO INFORMATIQUE",
+  "45": "45 - RADIOTELEPHONIE",
+  "60": "60 - CHAUSSURE",
+  "61": "61 - BEBE",
+  "62": "62 - ENFANT",
+  "63": "63 - FEMME",
+  "64": "64 - HOMME",
+  "65": "65 - LINGE DE MAISON",
+  "66": "66 - ACCESSOIRES",
+  "67": "67 - BIJOUTERIE"
+};
 
-      rayons: {
-        "Tous les rayons": {
-          ca: "335 K€",
-          marge: "28,44%",
-          stockNegatif: 32,
-          ruptureCatalogue: 17,
-          statut: "🟢",
-          brief:
-            "Bonne dynamique magasin avec une performance globale positive.",
-          alertes: [
-            "Contrôler les ruptures fortes rotations.",
-            "Maintenir la disponibilité promotionnelle.",
-            "Nettoyer les TG principales.",
-            "Contrôler la propreté des réserves."
-          ]
-        },
+const allRayons = ["Tous les rayons", ...Object.values(rayonMapping)];
 
-        "20 - CHARCUT.TRAITEUR": {
-          ca: "22,1 K€",
-          marge: "31,4%",
-          stockNegatif: 8,
-          ruptureCatalogue: 4,
-          statut: "🟢",
-          brief:
-            "Rayon performant avec bonne tenue commerciale.",
-          alertes: [
-            "Contrôler les DLC courtes.",
-            "Priorité remplissage LS traiteur.",
-            "Nettoyer les vitrines avant 10h."
-          ]
-        }
-      }
-    };
+const reportingData = {
+  magasin: "HF7152 - Narbonne",
+  date: "14/05/2026",
+  rayons: {}
+};
 
-    const allRayons = Object.keys(reportingData.rayons);
+allRayons.forEach((rayon, index) => {
+  reportingData.rayons[rayon] = {
+    ca: `${20 + index} K€`,
+    marge: `${25 + (index % 8)},40%`,
+    stockNegatif: index + 2,
+    ruptureCatalogue: index % 7,
+    statut: index % 2 === 0 ? "🟢" : "🟠",
+    classementRegion: "#"+(index+1)+" Région",
+    brief: `Analyse IA du rayon ${rayon}. Performance consolidée avec suivi opérationnel.`,
+    alertes: [
+      `Contrôle disponibilité ${rayon}`,
+      `Nettoyage zone ${rayon}`,
+      `Contrôle rupture ${rayon}`,
+      `Vérification facing ${rayon}`
+    ]
+  };
+});
 
-    function KpiCard({ title, value }) {
-      return (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-lg p-5">
-          <p className="text-sm text-slate-500">{title}</p>
+function KpiCard({ title, value }) {
+  return (
+    <div className="bg-white rounded-3xl border border-slate-200 shadow-lg p-5">
+      <p className="text-sm text-slate-500">{title}</p>
+      <h3 className="text-3xl font-black text-slate-900 mt-3">{value}</h3>
+    </div>
+  );
+}
 
-          <h3 className="text-3xl font-black text-slate-900 mt-3">
-            {value}
-          </h3>
-        </div>
-      );
+function App() {
+
+  const [selectedRayon, setSelectedRayon] = useState("Tous les rayons");
+  const [manualInput, setManualInput] = useState("");
+  const [manualConsignes, setManualConsignes] = useState([]);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [showConsignesModal, setShowConsignesModal] = useState(false);
+  const [disabledConsignes, setDisabledConsignes] = useState([]);
+
+  const [performancePdfName, setPerformancePdfName] = useState("");
+  const [comparaisonPdfName, setComparaisonPdfName] = useState("");
+  const [classementPdfName, setClassementPdfName] = useState("");
+
+  const performancePdfRef = useRef(null);
+  const comparaisonPdfRef = useRef(null);
+  const classementPdfRef = useRef(null);
+
+  const selectedData = useMemo(() => {
+    return reportingData.rayons[selectedRayon];
+  }, [selectedRayon]);
+
+  const handlePdfImport = (event, type) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (type === "performance") {
+      setPerformancePdfName(file.name);
     }
 
-    function App() {
-      const [selectedRayon, setSelectedRayon] = useState("Tous les rayons");
+    if (type === "comparaison") {
+      setComparaisonPdfName(file.name);
+    }
 
-      const [performancePdfName, setPerformancePdfName] = useState("");
-      const [classementPdfName, setClassementPdfName] = useState("");
-      const [indicateursPdfName, setIndicateursPdfName] = useState("");
+    if (type === "classement") {
+      setClassementPdfName(file.name);
+    }
 
-      const [showManualModal, setShowManualModal] = useState(false);
+    alert("PDF importé : " + file.name);
+  };
 
-      const [manualInput, setManualInput] = useState("");
-      const [manualConsignes, setManualConsignes] = useState([]);
+  const handleGenerateBrief = () => {
+    alert("Brief généré avec succès.");
+  };
 
-      const performancePdfRef = useRef(null);
-      const classementPdfRef = useRef(null);
-      const indicateursPdfRef = useRef(null);
+  const handlePrint = () => {
+    window.print();
+  };
 
-      const selectedData = useMemo(() => {
-        return reportingData.rayons[selectedRayon];
-      }, [selectedRayon]);
+  const addManualConsigne = () => {
+    if (!manualInput.trim()) return;
 
-      const handlePdfImport = (event, type) => {
-        const file = event.target.files[0];
+    setManualConsignes([...manualConsignes, manualInput]);
 
-        if (!file) return;
+    setManualInput("");
+    setShowManualModal(false);
+  };
 
-        if (type === "performance") {
-          setPerformancePdfName(file.name);
-        }
+  const toggleConsigne = (consigne) => {
+    if (disabledConsignes.includes(consigne)) {
+      setDisabledConsignes(
+        disabledConsignes.filter(c => c !== consigne)
+      );
+    } else {
+      setDisabledConsignes([...disabledConsignes, consigne]);
+    }
+  };
 
-        if (type === "classement") {
-          setClassementPdfName(file.name);
-        }
+  return (
+    <div className="min-h-screen bg-slate-100 p-6">
 
-        if (type === "indicateurs") {
-          setIndicateursPdfName(file.name);
-        }
+      <div className="max-w-7xl mx-auto space-y-6">
 
-        alert("PDF importé : " + file.name);
-      };
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
 
-      const addManualConsigne = () => {
-        if (!manualInput.trim()) return;
+          <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-6">
 
-        setManualConsignes([...manualConsignes, manualInput]);
+            <div>
+              <h1 className="text-5xl font-black text-slate-900">
+                Brief Journalier Carrefour
+              </h1>
 
-        setManualInput("");
-        setShowManualModal(false);
-      };
-
-      const handlePrint = () => {
-        window.print();
-      };
-
-      return (
-        <div className="min-h-screen bg-slate-100 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-
-            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
-
-              <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-6">
-
-                <div>
-                  <h1 className="text-5xl font-black text-slate-900">
-                    Brief Journalier Carrefour
-                  </h1>
-
-                  <p className="text-slate-500 text-lg mt-3">
-                    {reportingData.magasin} • {reportingData.date}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-3 no-print">
-
-                  <input
-                    ref={performancePdfRef}
-                    type="file"
-                    accept="application/pdf"
-                    className="hidden"
-                    onChange={(e) => handlePdfImport(e, "performance")}
-                  />
-
-                  <input
-                    ref={classementPdfRef}
-                    type="file"
-                    accept="application/pdf"
-                    className="hidden"
-                    onChange={(e) => handlePdfImport(e, "classement")}
-                  />
-
-                  <input
-                    ref={indicateursPdfRef}
-                    type="file"
-                    accept="application/pdf"
-                    className="hidden"
-                    onChange={(e) => handlePdfImport(e, "indicateurs")}
-                  />
-
-                  <button
-                    onClick={() => performancePdfRef.current.click()}
-                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold"
-                  >
-                    Import PDF Performance
-                    <div className="text-xs text-emerald-600 mt-1">
-                      {performancePdfName}
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => classementPdfRef.current.click()}
-                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold"
-                  >
-                    Import PDF Comparaison
-                    <div className="text-xs text-emerald-600 mt-1">
-                      {classementPdfName}
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => indicateursPdfRef.current.click()}
-                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold"
-                  >
-                    Import PDF Classement
-                    <div className="text-xs text-emerald-600 mt-1">
-                      {indicateursPdfName}
-                    </div>
-                  </button>
-
-                  <button
-                    className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold"
-                    onClick={handlePrint}
-                  >
-                    Imprimer
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-8 flex flex-col xl:flex-row gap-4">
-
-                <select
-                  value={selectedRayon}
-                  onChange={(e) => setSelectedRayon(e.target.value)}
-                  className="w-full xl:w-[520px] rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg"
-                >
-                  {allRayons.map((rayon) => (
-                    <option key={rayon} value={rayon}>
-                      {rayon}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => setShowManualModal(true)}
-                  className="bg-blue-600 text-white px-5 py-3 rounded-2xl font-semibold no-print"
-                >
-                  Ajouter une consigne
-                </button>
-              </div>
+              <p className="text-slate-500 text-lg mt-3">
+                {reportingData.magasin} • {reportingData.date}
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-              <KpiCard title="CA" value={selectedData.ca} />
-              <KpiCard title="Marge" value={selectedData.marge} />
-              <KpiCard title="Stocks négatifs" value={selectedData.stockNegatif} />
-              <KpiCard title="Ruptures catalogue" value={selectedData.ruptureCatalogue} />
-            </div>
+            <div className="flex flex-wrap gap-3 no-print">
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <input
+                ref={performancePdfRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => handlePdfImport(e, "performance")}
+              />
 
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+              <input
+                ref={comparaisonPdfRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => handlePdfImport(e, "comparaison")}
+              />
 
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-3xl font-black text-slate-900">
-                    Brief automatique IA
-                  </h2>
+              <input
+                ref={classementPdfRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => handlePdfImport(e, "classement")}
+              />
 
-                  <span className="text-4xl">
-                    {selectedData.statut}
-                  </span>
+              <button
+                onClick={() => performancePdfRef.current.click()}
+                className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100"
+              >
+                Import PDF Performance
+                <div className="text-xs text-emerald-600 mt-1">
+                  {performancePdfName}
                 </div>
+              </button>
 
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-lg leading-8 text-slate-700">
-                  {selectedData.brief}
+              <button
+                onClick={() => comparaisonPdfRef.current.click()}
+                className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100"
+              >
+                Import PDF Comparaison
+                <div className="text-xs text-emerald-600 mt-1">
+                  {comparaisonPdfName}
                 </div>
-              </div>
+              </button>
 
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
-
-                <h2 className="text-3xl font-black text-slate-900 mb-6">
-                  Consignes opérationnelles
-                </h2>
-
-                <div className="space-y-4">
-
-                  {selectedData.alertes.map((consigne, index) => (
-                    <div
-                      key={index}
-                      className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-700"
-                    >
-                      • {consigne}
-                    </div>
-                  ))}
-
-                  {manualConsignes.map((consigne, index) => (
-                    <div
-                      key={index}
-                      className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900"
-                    >
-                      • {consigne}
-                    </div>
-                  ))}
-
+              <button
+                onClick={() => classementPdfRef.current.click()}
+                className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100"
+              >
+                Import PDF Classement
+                <div className="text-xs text-emerald-600 mt-1">
+                  {classementPdfName}
                 </div>
-              </div>
+              </button>
+
+              <button
+                onClick={handleGenerateBrief}
+                className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-emerald-700"
+              >
+                Générer le brief
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-black"
+              >
+                Imprimer le brief
+              </button>
+
             </div>
           </div>
 
-          {showManualModal && (
-            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6">
+          <div className="mt-8 flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
 
-              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 space-y-6">
+            <select
+              value={selectedRayon}
+              onChange={(e) => setSelectedRayon(e.target.value)}
+              className="w-full xl:w-[520px] rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg"
+            >
+              {allRayons.map((rayon) => (
+                <option key={rayon} value={rayon}>
+                  {rayon}
+                </option>
+              ))}
+            </select>
 
-                <div className="flex items-center justify-between">
-                  <h2 className="text-3xl font-black">
-                    Consigne manuelle
-                  </h2>
+            <div className="flex flex-wrap gap-3">
 
-                  <button onClick={() => setShowManualModal(false)}>
-                    ✕
-                  </button>
-                </div>
+              <button
+                onClick={() => setShowManualModal(true)}
+                className="bg-slate-900 text-white px-5 py-3 rounded-2xl font-semibold"
+              >
+                Consigne manuelle
+              </button>
 
-                <textarea
-                  value={manualInput}
-                  onChange={(e) => setManualInput(e.target.value)}
-                  placeholder="Ajouter une consigne..."
-                  className="w-full min-h-[140px] rounded-2xl border border-slate-300 p-5"
-                />
+              <button
+                onClick={() => setShowConsignesModal(true)}
+                className="bg-blue-600 text-white px-5 py-3 rounded-2xl font-semibold"
+              >
+                Consignes
+              </button>
 
-                <button
-                  onClick={addManualConsigne}
-                  className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-semibold"
-                >
-                  Ajouter
-                </button>
-              </div>
+              <button
+                className="bg-emerald-600 text-white px-5 py-3 rounded-2xl font-semibold"
+              >
+                Classement Région
+              </button>
+
             </div>
-          )}
+
+          </div>
 
         </div>
-      );
-    }
 
-    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          <KpiCard title="CA" value={selectedData.ca} />
+          <KpiCard title="Marge" value={selectedData.marge} />
+          <KpiCard title="Stocks négatifs" value={selectedData.stockNegatif} />
+          <KpiCard title="Ruptures catalogue" value={selectedData.ruptureCatalogue} />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+
+            <div className="flex items-center justify-between mb-6">
+
+              <h2 className="text-3xl font-black text-slate-900">
+                Brief automatique IA
+              </h2>
+
+              <span className="text-4xl">{selectedData.statut}</span>
+
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-lg leading-8 text-slate-700">
+              {selectedData.brief}
+            </div>
+
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+
+            <h2 className="text-3xl font-black text-slate-900 mb-6">
+              Consignes opérationnelles
+            </h2>
+
+            <div className="space-y-4">
+
+              {selectedData.alertes
+                .filter(c => !disabledConsignes.includes(c))
+                .map((consigne, index) => (
+                <div
+                  key={index}
+                  className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-700"
+                >
+                  • {consigne}
+                </div>
+              ))}
+
+              {manualConsignes.map((consigne, index) => (
+                <div
+                  key={index}
+                  className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900"
+                >
+                  • {consigne}
+                </div>
+              ))}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {showManualModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6">
+
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 space-y-6">
+
+            <div className="flex items-center justify-between">
+
+              <h2 className="text-3xl font-black">
+                Consigne manuelle
+              </h2>
+
+              <button onClick={() => setShowManualModal(false)}>
+                ✕
+              </button>
+
+            </div>
+
+            <textarea
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              placeholder="Ajouter une consigne spécifique..."
+              className="w-full min-h-[140px] rounded-2xl border border-slate-300 p-5"
+            />
+
+            <button
+              onClick={addManualConsigne}
+              className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-semibold"
+            >
+              Ajouter la consigne
+            </button>
+
+          </div>
+
+        </div>
+      )}
+
+      {showConsignesModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6">
+
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl p-8 space-y-6 max-h-[90vh] overflow-auto">
+
+            <div className="flex items-center justify-between">
+
+              <h2 className="text-3xl font-black">
+                Gestion des consignes
+              </h2>
+
+              <button onClick={() => setShowConsignesModal(false)}>
+                ✕
+              </button>
+
+            </div>
+
+            <div className="space-y-4">
+
+              {selectedData.alertes.map((consigne, index) => {
+
+                const disabled = disabledConsignes.includes(consigne);
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                  >
+
+                    <p className={disabled ? "line-through text-slate-400" : "text-slate-700"}>
+                      • {consigne}
+                    </p>
+
+                    <button
+                      onClick={() => toggleConsigne(consigne)}
+                      className={disabled
+                        ? "px-4 py-2 rounded-xl font-semibold bg-emerald-100 text-emerald-700"
+                        : "px-4 py-2 rounded-xl font-semibold bg-red-100 text-red-700"}
+                    >
+                      {disabled ? "Réactiver" : "Désactiver"}
+                    </button>
+
+                  </div>
+                );
+              })}
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+
 </body>
 </html>
