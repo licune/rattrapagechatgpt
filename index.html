@@ -1,46 +1,346 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Brief Journalier Carrefour</title>
 
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <meta
-      name="description"
-      content="Application Brief Journalier Carrefour - Parsing PDF et génération automatique de brief."
-    />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
 
-    <title>Brief Journalier Carrefour</title>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
 
-    <!-- Police -->
-    <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-    />
+      body {
+        background: white !important;
+      }
+    }
+  </style>
+</head>
 
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
+<body class="bg-slate-100">
+  <div id="root"></div>
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
+  <script type="text/babel">
 
-  <body class="bg-slate-100">
-    <div id="root"></div>
+    const { useState, useMemo, useRef } = React;
 
-    <script
-      type="module"
-      src="/src/main.tsx"
-    ></script>
-  </body>
+    const reportingData = {
+      magasin: "HF7152 - Narbonne",
+      date: "14/05/2026",
+
+      rayons: {
+        "Tous les rayons": {
+          ca: "335 K€",
+          marge: "28,44%",
+          stockNegatif: 32,
+          ruptureCatalogue: 17,
+          statut: "🟢",
+          brief:
+            "Bonne dynamique magasin avec une performance globale positive.",
+          alertes: [
+            "Contrôler les ruptures fortes rotations.",
+            "Maintenir la disponibilité promotionnelle.",
+            "Nettoyer les TG principales.",
+            "Contrôler la propreté des réserves."
+          ]
+        },
+
+        "20 - CHARCUT.TRAITEUR": {
+          ca: "22,1 K€",
+          marge: "31,4%",
+          stockNegatif: 8,
+          ruptureCatalogue: 4,
+          statut: "🟢",
+          brief:
+            "Rayon performant avec bonne tenue commerciale.",
+          alertes: [
+            "Contrôler les DLC courtes.",
+            "Priorité remplissage LS traiteur.",
+            "Nettoyer les vitrines avant 10h."
+          ]
+        }
+      }
+    };
+
+    const allRayons = Object.keys(reportingData.rayons);
+
+    function KpiCard({ title, value }) {
+      return (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-lg p-5">
+          <p className="text-sm text-slate-500">{title}</p>
+
+          <h3 className="text-3xl font-black text-slate-900 mt-3">
+            {value}
+          </h3>
+        </div>
+      );
+    }
+
+    function App() {
+      const [selectedRayon, setSelectedRayon] = useState("Tous les rayons");
+
+      const [performancePdfName, setPerformancePdfName] = useState("");
+      const [classementPdfName, setClassementPdfName] = useState("");
+      const [indicateursPdfName, setIndicateursPdfName] = useState("");
+
+      const [showManualModal, setShowManualModal] = useState(false);
+
+      const [manualInput, setManualInput] = useState("");
+      const [manualConsignes, setManualConsignes] = useState([]);
+
+      const performancePdfRef = useRef(null);
+      const classementPdfRef = useRef(null);
+      const indicateursPdfRef = useRef(null);
+
+      const selectedData = useMemo(() => {
+        return reportingData.rayons[selectedRayon];
+      }, [selectedRayon]);
+
+      const handlePdfImport = (event, type) => {
+        const file = event.target.files[0];
+
+        if (!file) return;
+
+        if (type === "performance") {
+          setPerformancePdfName(file.name);
+        }
+
+        if (type === "classement") {
+          setClassementPdfName(file.name);
+        }
+
+        if (type === "indicateurs") {
+          setIndicateursPdfName(file.name);
+        }
+
+        alert("PDF importé : " + file.name);
+      };
+
+      const addManualConsigne = () => {
+        if (!manualInput.trim()) return;
+
+        setManualConsignes([...manualConsignes, manualInput]);
+
+        setManualInput("");
+        setShowManualModal(false);
+      };
+
+      const handlePrint = () => {
+        window.print();
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-100 p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
+
+              <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-6">
+
+                <div>
+                  <h1 className="text-5xl font-black text-slate-900">
+                    Brief Journalier Carrefour
+                  </h1>
+
+                  <p className="text-slate-500 text-lg mt-3">
+                    {reportingData.magasin} • {reportingData.date}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3 no-print">
+
+                  <input
+                    ref={performancePdfRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => handlePdfImport(e, "performance")}
+                  />
+
+                  <input
+                    ref={classementPdfRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => handlePdfImport(e, "classement")}
+                  />
+
+                  <input
+                    ref={indicateursPdfRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => handlePdfImport(e, "indicateurs")}
+                  />
+
+                  <button
+                    onClick={() => performancePdfRef.current.click()}
+                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold"
+                  >
+                    Import PDF Performance
+                    <div className="text-xs text-emerald-600 mt-1">
+                      {performancePdfName}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => classementPdfRef.current.click()}
+                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold"
+                  >
+                    Import PDF Comparaison
+                    <div className="text-xs text-emerald-600 mt-1">
+                      {classementPdfName}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => indicateursPdfRef.current.click()}
+                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold"
+                  >
+                    Import PDF Classement
+                    <div className="text-xs text-emerald-600 mt-1">
+                      {indicateursPdfName}
+                    </div>
+                  </button>
+
+                  <button
+                    className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold"
+                    onClick={handlePrint}
+                  >
+                    Imprimer
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-col xl:flex-row gap-4">
+
+                <select
+                  value={selectedRayon}
+                  onChange={(e) => setSelectedRayon(e.target.value)}
+                  className="w-full xl:w-[520px] rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg"
+                >
+                  {allRayons.map((rayon) => (
+                    <option key={rayon} value={rayon}>
+                      {rayon}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => setShowManualModal(true)}
+                  className="bg-blue-600 text-white px-5 py-3 rounded-2xl font-semibold no-print"
+                >
+                  Ajouter une consigne
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+              <KpiCard title="CA" value={selectedData.ca} />
+              <KpiCard title="Marge" value={selectedData.marge} />
+              <KpiCard title="Stocks négatifs" value={selectedData.stockNegatif} />
+              <KpiCard title="Ruptures catalogue" value={selectedData.ruptureCatalogue} />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-black text-slate-900">
+                    Brief automatique IA
+                  </h2>
+
+                  <span className="text-4xl">
+                    {selectedData.statut}
+                  </span>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-lg leading-8 text-slate-700">
+                  {selectedData.brief}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+
+                <h2 className="text-3xl font-black text-slate-900 mb-6">
+                  Consignes opérationnelles
+                </h2>
+
+                <div className="space-y-4">
+
+                  {selectedData.alertes.map((consigne, index) => (
+                    <div
+                      key={index}
+                      className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-700"
+                    >
+                      • {consigne}
+                    </div>
+                  ))}
+
+                  {manualConsignes.map((consigne, index) => (
+                    <div
+                      key={index}
+                      className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900"
+                    >
+                      • {consigne}
+                    </div>
+                  ))}
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {showManualModal && (
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6">
+
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 space-y-6">
+
+                <div className="flex items-center justify-between">
+                  <h2 className="text-3xl font-black">
+                    Consigne manuelle
+                  </h2>
+
+                  <button onClick={() => setShowManualModal(false)}>
+                    ✕
+                  </button>
+                </div>
+
+                <textarea
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  placeholder="Ajouter une consigne..."
+                  className="w-full min-h-[140px] rounded-2xl border border-slate-300 p-5"
+                />
+
+                <button
+                  onClick={addManualConsigne}
+                  className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-semibold"
+                >
+                  Ajouter
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
 </html>
