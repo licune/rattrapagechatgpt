@@ -1,11 +1,553 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Brief Journalier Carrefour</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brief Journalier Carrefour</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+
+      body {
+        background: white !important;
+      }
+    }
+  </style>
 </head>
-<body>
-<h1>Brief Journalier Carrefour</h1>
-<p>Fichier HTML généré avec succès.</p>
+
+<body class="bg-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+
+    const { useState, useMemo, useRef } = React;
+
+    const rayons = [
+      "Tous les rayons",
+      "10 - BOISSONS",
+      "11 - DROGUERIE",
+      "12 - PARFUMERIE HYGIENE",
+      "14 - EPICERIE",
+      "19 - PARAPHARMACIE",
+      "20 - CHARCUT.TRAITEUR",
+      "21 - POISSONNERIE",
+      "22 - FRUITS ET LEGUMES",
+      "23 - BOULANGERIE/PATISSERIE",
+      "24 - BOUCHERIE VOLAILLE",
+      "25 - P.L.S.",
+      "26 - CAFETERIA ESPACE RESTA",
+      "30 - BRICOLAGE",
+      "31 - CONFORT DE LA MAISON",
+      "32 - PAPETERIE",
+      "33 - JOUET SPORT",
+      "34 - JARDIN ET ANIMALERIE",
+      "35 - AUTO",
+      "40 - GEM",
+      "41 - PEM",
+      "42 - PHOTO COMMUNICATION",
+      "43 - IMAGE ET SON",
+      "44 - MICRO INFORMATIQUE",
+      "45 - RADIOTELEPHONIE",
+      "60 - CHAUSSURE",
+      "61 - BEBE",
+      "62 - ENFANT",
+      "63 - FEMME",
+      "64 - HOMME",
+      "65 - LINGE DE MAISON",
+      "66 - ACCESSOIRES",
+      "67 - BIJOUTERIE"
+    ];
+
+    const safeString = (value, fallback = "N/A") => {
+      if (typeof value !== "string") return fallback;
+      const clean = value.trim();
+      return clean.length ? clean : fallback;
+    };
+
+    const safeNumber = (value, fallback = 0) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const safePercentage = (value) => {
+      const parsed = parseFloat(String(value).replace(",", "."));
+      if (!Number.isFinite(parsed)) return "0,00%";
+      return parsed.toFixed(2).replace(".", ",") + "%";
+    };
+
+    const reportingData = {};
+
+    rayons.forEach((rayon, index) => {
+      reportingData[rayon] = {
+        ca: safeString(`${25 + index} K€`),
+        marge: safePercentage(22 + (index % 10)),
+        stockNegatif: safeNumber(index + 1),
+        ruptureCatalogue: safeNumber(index % 6),
+        statut: index % 2 === 0 ? "🟢" : "🟠",
+        classementRegion: safeString(`#${index + 1} Région`),
+        brief: safeString(
+          `Analyse automatique du rayon ${rayon}. Activité suivie avec contrôle des KPI et des ruptures.`
+        ),
+        alertes: [
+          `Contrôle disponibilité ${rayon}`,
+          `Vérification facing ${rayon}`,
+          `Nettoyage du secteur ${rayon}`,
+          `Contrôle des ruptures ${rayon}`
+        ]
+      };
+    });
+
+    function KpiCard({ title, value }) {
+      return (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-lg p-5">
+          <p className="text-sm text-slate-500">{title}</p>
+
+          <h3 className="text-3xl font-black text-slate-900 mt-3 break-words">
+            {value}
+          </h3>
+        </div>
+      );
+    }
+
+    function App() {
+
+      const [selectedRayon, setSelectedRayon] = useState("Tous les rayons");
+
+      const [manualInput, setManualInput] = useState("");
+      const [manualConsignes, setManualConsignes] = useState([]);
+      const [disabledConsignes, setDisabledConsignes] = useState([]);
+
+      const [showManualModal, setShowManualModal] = useState(false);
+      const [showConsignesModal, setShowConsignesModal] = useState(false);
+
+      const [performancePdfName, setPerformancePdfName] = useState("");
+      const [comparaisonPdfName, setComparaisonPdfName] = useState("");
+      const [classementPdfName, setClassementPdfName] = useState("");
+
+      const performancePdfRef = useRef(null);
+      const comparaisonPdfRef = useRef(null);
+      const classementPdfRef = useRef(null);
+
+      const data = useMemo(() => {
+        return reportingData[selectedRayon] || reportingData["Tous les rayons"];
+      }, [selectedRayon]);
+
+      const validatePdf = (file) => {
+        if (!file) {
+          alert("Aucun fichier sélectionné.");
+          return false;
+        }
+
+        if (file.type !== "application/pdf") {
+          alert("Veuillez importer un fichier PDF valide.");
+          return false;
+        }
+
+        if (file.size > 25 * 1024 * 1024) {
+          alert("Le fichier PDF dépasse 25 MB.");
+          return false;
+        }
+
+        return true;
+      };
+
+      const handlePdfImport = (event, type) => {
+
+        try {
+
+          const file = event.target.files[0];
+
+          if (!validatePdf(file)) {
+            return;
+          }
+
+          const safeName = safeString(file.name, "PDF");
+
+          if (type === "performance") {
+            setPerformancePdfName(safeName);
+          }
+
+          if (type === "comparaison") {
+            setComparaisonPdfName(safeName);
+          }
+
+          if (type === "classement") {
+            setClassementPdfName(safeName);
+          }
+
+          alert("PDF importé : " + safeName);
+
+        } catch (error) {
+          console.error(error);
+          alert("Erreur import PDF");
+        }
+      };
+
+      const handleGenerateBrief = () => {
+
+        try {
+
+          if (
+            !performancePdfName ||
+            !comparaisonPdfName ||
+            !classementPdfName
+          ) {
+            alert("Veuillez importer les 3 PDF.");
+            return;
+          }
+
+          alert("Brief généré avec succès.");
+
+        } catch (error) {
+          console.error(error);
+          alert("Erreur génération brief");
+        }
+      };
+
+      const handlePrint = () => {
+        try {
+          window.print();
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      const addManualConsigne = () => {
+
+        const clean = safeString(manualInput, "");
+
+        if (!clean) {
+          alert("Veuillez saisir une consigne.");
+          return;
+        }
+
+        if (clean.length > 300) {
+          alert("Consigne trop longue.");
+          return;
+        }
+
+        setManualConsignes(prev => [...prev, clean]);
+
+        setManualInput("");
+        setShowManualModal(false);
+      };
+
+      const toggleConsigne = (consigne) => {
+
+        if (!consigne) return;
+
+        if (disabledConsignes.includes(consigne)) {
+          setDisabledConsignes(
+            disabledConsignes.filter(item => item !== consigne)
+          );
+        } else {
+          setDisabledConsignes([...disabledConsignes, consigne]);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-100 p-6">
+
+          <div className="max-w-7xl mx-auto space-y-6">
+
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
+
+              <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-6">
+
+                <div>
+                  <h1 className="text-5xl font-black text-slate-900">
+                    Brief Journalier Carrefour
+                  </h1>
+
+                  <p className="text-slate-500 text-lg mt-3">
+                    HF7152 - Narbonne • 14/05/2026
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3 no-print">
+
+                  <input
+                    ref={performancePdfRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => handlePdfImport(e, "performance")}
+                  />
+
+                  <input
+                    ref={comparaisonPdfRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => handlePdfImport(e, "comparaison")}
+                  />
+
+                  <input
+                    ref={classementPdfRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => handlePdfImport(e, "classement")}
+                  />
+
+                  <button
+                    onClick={() => performancePdfRef.current.click()}
+                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100"
+                  >
+                    Import PDF Performance
+                    <div className="text-xs text-emerald-600 mt-1">
+                      {performancePdfName}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => comparaisonPdfRef.current.click()}
+                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100"
+                  >
+                    Import PDF Comparaison
+                    <div className="text-xs text-emerald-600 mt-1">
+                      {comparaisonPdfName}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => classementPdfRef.current.click()}
+                    className="px-5 py-3 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100"
+                  >
+                    Import PDF Classement
+                    <div className="text-xs text-emerald-600 mt-1">
+                      {classementPdfName}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={handleGenerateBrief}
+                    className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-emerald-700"
+                  >
+                    Générer le brief
+                  </button>
+
+                  <button
+                    onClick={handlePrint}
+                    className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-black"
+                  >
+                    Imprimer le brief
+                  </button>
+
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
+
+                <select
+                  value={selectedRayon}
+                  onChange={(e) => setSelectedRayon(e.target.value)}
+                  className="w-full xl:w-[520px] rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg"
+                >
+                  {rayons.map((rayon, index) => (
+                    <option key={index} value={rayon}>
+                      {rayon}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="flex flex-wrap gap-3">
+
+                  <button
+                    onClick={() => setShowManualModal(true)}
+                    className="bg-slate-900 text-white px-5 py-3 rounded-2xl font-semibold"
+                  >
+                    Consigne manuelle
+                  </button>
+
+                  <button
+                    onClick={() => setShowConsignesModal(true)}
+                    className="bg-blue-600 text-white px-5 py-3 rounded-2xl font-semibold"
+                  >
+                    Consignes
+                  </button>
+
+                  <button
+                    className="bg-emerald-600 text-white px-5 py-3 rounded-2xl font-semibold"
+                  >
+                    {data.classementRegion}
+                  </button>
+
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+
+              <KpiCard title="CA" value={data.ca} />
+              <KpiCard title="Marge" value={data.marge} />
+              <KpiCard title="Stocks négatifs" value={data.stockNegatif} />
+              <KpiCard title="Ruptures catalogue" value={data.ruptureCatalogue} />
+
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+
+                <div className="flex items-center justify-between mb-6">
+
+                  <h2 className="text-3xl font-black text-slate-900">
+                    Brief automatique IA
+                  </h2>
+
+                  <span className="text-4xl">
+                    {data.statut}
+                  </span>
+
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-lg leading-8 text-slate-700">
+                  {data.brief}
+                </div>
+
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+
+                <h2 className="text-3xl font-black text-slate-900 mb-6">
+                  Consignes opérationnelles
+                </h2>
+
+                <div className="space-y-4">
+
+                  {data.alertes
+                    .filter(item => !disabledConsignes.includes(item))
+                    .map((consigne, index) => (
+
+                    <div
+                      key={index}
+                      className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-700"
+                    >
+                      • {consigne}
+                    </div>
+                  ))}
+
+                  {manualConsignes.map((consigne, index) => (
+
+                    <div
+                      key={index}
+                      className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900"
+                    >
+                      • {consigne}
+                    </div>
+                  ))}
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {showManualModal && (
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6">
+
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 space-y-6">
+
+                <div className="flex items-center justify-between">
+
+                  <h2 className="text-3xl font-black">
+                    Consigne manuelle
+                  </h2>
+
+                  <button onClick={() => setShowManualModal(false)}>
+                    ✕
+                  </button>
+
+                </div>
+
+                <textarea
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  placeholder="Ajouter une consigne spécifique..."
+                  className="w-full min-h-[140px] rounded-2xl border border-slate-300 p-5"
+                />
+
+                <button
+                  onClick={addManualConsigne}
+                  className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-semibold"
+                >
+                  Ajouter la consigne
+                </button>
+
+              </div>
+            </div>
+          )}
+
+          {showConsignesModal && (
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6">
+
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl p-8 space-y-6 max-h-[90vh] overflow-auto">
+
+                <div className="flex items-center justify-between">
+
+                  <h2 className="text-3xl font-black">
+                    Gestion des consignes
+                  </h2>
+
+                  <button onClick={() => setShowConsignesModal(false)}>
+                    ✕
+                  </button>
+
+                </div>
+
+                <div className="space-y-4">
+
+                  {data.alertes.map((consigne, index) => {
+
+                    const disabled = disabledConsignes.includes(consigne);
+
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                      >
+
+                        <p className={disabled ? "line-through text-slate-400" : "text-slate-700"}>
+                          • {consigne}
+                        </p>
+
+                        <button
+                          onClick={() => toggleConsigne(consigne)}
+                          className={disabled
+                            ? "px-4 py-2 rounded-xl font-semibold bg-emerald-100 text-emerald-700"
+                            : "px-4 py-2 rounded-xl font-semibold bg-red-100 text-red-700"}
+                        >
+                          {disabled ? "Réactiver" : "Désactiver"}
+                        </button>
+
+                      </div>
+                    );
+                  })}
+
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+  </script>
 </body>
 </html>
